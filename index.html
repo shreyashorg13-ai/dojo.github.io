@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gojo's Karate Dojo - Domain Expansion</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@300;400;500;600;700&family=Permanent+Marker&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <!-- GSAP & Lenis for Smooth Scroll -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script> 
+
+    <style>
+        :root {
+            --paper: #f0f0eb;
+            --ink: #050505;
+            --curse-red: #c90000;
+            --cursed-energy: #3b006b;
+            --void-blue: #00ffff;
+        }
+
+        body {
+            background-color: var(--paper);
+            color: var(--ink);
+            font-family: 'Noto Sans JP', sans-serif;
+            overflow-x: hidden;
+            margin: 0;
+            /* Replaced custom cursor with auto for touch devices in JS, 
+               but kept 'none' as default for desktop consistency */
+            cursor: none; 
+            overscroll-behavior: none;
+        }
+
+        /* --- MANGA TEXTURES --- */
+        .texture-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.15;
+            backface-visibility: hidden;
+            transform: translateZ(0);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        .speed-lines {
+            position: absolute;
+            inset: 0;
+            background: repeating-conic-gradient(
+                from 0deg at 50% 50%,
+                transparent 0deg,
+                transparent 2deg,
+                rgba(0,0,0,0.05) 2.5deg,
+                transparent 3deg
+            );
+            mask-image: radial-gradient(circle, transparent 30%, black 100%);
+            z-index: 0;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        /* --- TYPOGRAPHY --- */
+        .font-jjk {
+            font-family: 'Teko', sans-serif;
+            text-transform: uppercase;
+            line-height: 0.8;
+            transform: scaleY(1.1);
+        }
+        .font-sfx { font-family: 'Permanent Marker', cursive; }
+        .vertical-text { writing-mode: vertical-rl; text-orientation: upright; }
+
+        /* --- CURSOR --- */
+        .cursor-blob {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: var(--ink);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: exclusion;
+        }
+        .cursor-trail {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--ink);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s, opacity 0.3s;
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(2deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        .levitate { animation: float 6s ease-in-out infinite; }
+
+        .ink-wipe {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 100vw; height: 100vw; 
+            background: var(--ink);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            z-index: 5; 
+            pointer-events: none;
+            will-change: transform; 
+        }
+        
+        .ink-wipe-in {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 100vw; height: 100vw;
+            background: var(--ink);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(4); 
+            z-index: 5;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        /* Section 1 Specifics */
+        .hero-parallax-layer {
+            position: absolute;
+            transition: transform 0.1s linear;
+            will-change: transform;
+        }
+
+        /* Section 2 Specifics (Limitless Upgrade) */
+        .void-grid {
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            perspective: 500px;
+            transform-style: preserve-3d;
+        }
+        
+        .sacred-geometry {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: spin-slow 20s linear infinite;
+        }
+
+        @keyframes spin-slow {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* Application Overlay */
+        #application-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--paper);
+            z-index: 100;
+            display: none;
+            opacity: 0;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        /* Stamp Effect */
+        .stamp-box {
+            border: 4px solid var(--curse-red);
+            padding: 2rem;
+            transform: rotate(-5deg);
+            opacity: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.2'/%3E%3C/svg%3E");
+        }
+
+        /* Layout */
+        .wrapper {
+            display: flex;
+            width: 500%;
+            height: 100vh;
+            will-change: transform;
+            transform: translate3d(0, 0, 0); 
+            backface-visibility: hidden;
+        }
+        .section {
+            width: 100vw;
+            height: 100vh;
+            flex-shrink: 0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-right: 2px solid var(--ink);
+        }
+
+        .manga-card {
+            background: white;
+            border: 4px solid var(--ink);
+            box-shadow: 15px 15px 0px var(--ink);
+            transition: all 0.3s;
+            transform-style: preserve-3d;
+            cursor: pointer;
+            will-change: transform;
+        }
+        .manga-card:hover { box-shadow: 20px 20px 0px var(--curse-red); }
+         .manga-card ,.focus:hover { box-shadow: 20px 20px 0px var(--cursed-energy); }
+          .manga-card,.domain:hover { box-shadow: 20px 20px 0px var(--void-blue); }
+
+        .tilt-container { perspective: 1000px; transform-style: preserve-3d; }
+
+        /* Mobile specific adjustments to ensure 100vh containment */
+        @media (max-width: 768px) {
+            .manga-card {
+                box-shadow: 5px 5px 0px var(--ink);
+            }
+            .manga-card:active {
+                box-shadow: 8px 8px 0px var(--curse-red);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="texture-overlay"></div>
+    <div class="cursor-blob"></div>
+    <div class="cursor-trail"></div>
+
+    <!-- Application Sent Overlay -->
+    <div id="application-overlay">
+        <div class="absolute inset-0 pointer-events-none">
+            <!-- Decorative Splatters - Adjusted opacity/size for mobile -->
+            <div class="absolute top-4 left-4 md:top-10 md:left-10 text-6xl md:text-9xl text-gray-200 font-jjk opacity-30 select-none">CONTRACT</div>
+            <div class="absolute bottom-4 right-4 md:bottom-10 md:right-10 text-6xl md:text-9xl text-gray-200 font-jjk opacity-30 select-none">SEALED</div>
+        </div>
+
+        <div class="stamp-box relative z-10 text-center border-red-600 text-red-600 mx-4">
+            <h2 class="text-6xl md:text-8xl font-jjk leading-none mb-2">APPLICATION<br>ACCEPTED</h2>
+            <div class="text-2xl md:text-4xl font-black border-t-4 border-red-600 pt-2 inline-block">承認 (APPROVED)</div>
+        </div>
+
+        <div class="mt-8 md:mt-12 text-center z-10 opacity-0 px-4" id="overlay-text">
+            <p class="text-lg md:text-2xl font-bold mb-2">The higher-ups have received your request.</p>
+            <p class="text-gray-500 font-sfx text-sm md:text-base">A crow will arrive with instructions in 3-5 days.</p>
+            
+            <button id="close-overlay" class="mt-8 px-6 py-2 md:px-8 md:py-3 bg-black text-white font-jjk text-lg md:text-xl hover:bg-gray-800 transition-colors uppercase tracking-widest hover-target">
+                Return to Dojo
+            </button>
+        </div>
+        
+        <div class="ink-wipe-overlay-2 absolute inset-0 bg-purple-900 pointer-events-none" style="transform: scale(0); border-radius: 50%; z-index: 5;"></div>
+        <div class="ink-wipe-overlay absolute inset-0 bg-black pointer-events-none" style="transform: scale(0); border-radius: 50%; z-index: 6;"></div>
+    </div>
+
+    <div class="wrapper" id="scroll-container">
+
+        <!-- SECTION 1: HERO - MANGA COVER PARALLAX -->
+        <section class="section relative overflow-hidden" id="hero-section">
+            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/shattered-island.png')] opacity-10"></div>
+            <div class="speed-lines opacity-30"></div>
+            
+            <!-- Layer 1 -->
+            <h1 class="hero-parallax-layer font-jjk text-[30vw] text-gray-200 opacity-50 select-none z-0 leading-none whitespace-nowrap" data-speed="0.02" style="top: 10%; left: -10%;">
+                JUJUTSU KAISEN
+            </h1>
+
+            <!-- Layer 2: Adjusted font size for mobile -->
+            <div class="hero-parallax-layer z-10 w-full h-full flex items-center justify-center pointer-events-none" data-speed="0.04">
+                <h1 class="text-[20vw] md:text-[25vw] font-jjk leading-[0.75] text-black text-center opacity-80 mix-blend-overlay select-none whitespace-nowrap">
+                    THE HONORED<br>ONE
+                </h1>
+            </div>
+
+            <!-- Layer 3 -->
+            <div class="hero-parallax-layer z-20 flex justify-center items-end w-full h-full bottom-0" data-speed="0.01">
+                <div class="relative w-auto h-[60vh] md:h-[90vh] mt-20 md:mt-0">
+                    <div class="absolute inset-0 bg-purple-500 blur-[100px] opacity-0 transition-opacity duration-300" id="gojo-aura"></div>
+                    <img src="PNGAnime.com-1886749336.png" 
+                         class="h-full object-contain grayscale contrast-125 drop-shadow-2xl hover:grayscale-0 transition-all duration-500 hover-target" 
+                         id="hero-image"
+                         alt="Gojo Satoru">
+                </div>
+            </div>
+
+            <!-- Layer 4: Responsive text size and padding -->
+            <div class="hero-parallax-layer z-30 w-full flex justify-between px-4 md:px-20 items-center h-full pointer-events-none" data-speed="0.08">
+                <div class="vertical-text font-black text-4xl md:text-8xl text-red-600 font-jjk tracking-widest opacity-80 mix-blend-multiply">
+                    領域展開
+                </div>
+            </div>
+
+            <!-- Layer 5 -->
+            <div class="hero-parallax-layer z-40 absolute bottom-0 left-0" data-speed="0.12">
+                <div class="w-32 h-32 md:w-64 md:h-64 bg-black rounded-full blur-xl opacity-20 transform scale-y-50"></div>
+            </div>
+
+            <div class="ink-wipe" id="ink-1"></div>
+        </section>
+
+
+        <!-- SECTION 2: THE VOID (UPGRADED) -->
+        <section class="section bg-black text-white relative overflow-hidden" id="void-section">
+            <div class="ink-wipe-in bg-black"></div>
+
+            <div class="absolute inset-0 void-grid opacity-20 animate-pulse"></div>
+            <div class="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none">
+                <div class="sacred-geometry w-[80vw] h-[80vw] md:w-[40vw] md:h-[40vw]" style="border-style: dashed; animation-duration: 60s;"></div>
+                <div class="sacred-geometry w-[120vw] h-[120vw] md:w-[60vw] md:h-[60vw]" style="border-style: dotted; animation-duration: 40s; animation-direction: reverse;"></div>
+                <div class="sacred-geometry w-[150vw] h-[150vw] md:w-[90vw] md:h-[90vw]" style="opacity: 0.5; animation-duration: 100s;"></div>
+            </div>
+
+            <div class="absolute inset-0 flex justify-center items-center pointer-events-none z-0">
+                 <span class="text-[40vw] font-black text-gray-900 opacity-20 select-none blur-sm">無下</span>
+            </div>
+
+            <!-- Responsive Grid: Changes to Flex Column on Mobile -->
+            <div class="flex flex-col md:grid md:grid-cols-2 w-full max-w-7xl px-4 md:px-8 items-center justify-center z-10 h-full relative gap-4 md:gap-0">
+                
+                <!-- Interactive Levitating Area -->
+                <div class="relative w-full h-[40vh] md:h-[60vh] flex items-center justify-center hover-target order-1" id="limitless-zone">
+                    <div class="absolute w-[200px] h-[200px] md:w-[300px] md:h-[300px] bg-black rounded-full shadow-[0_0_100px_rgba(147,51,234,0.5)] z-10"></div>
+                    
+                    <div class="absolute w-[300px] h-[300px] md:w-[500px] md:h-[500px] rounded-full border border-cyan-500 opacity-20 transition-all duration-100 ease-out z-10" id="void-barrier"></div>
+                    <div class="absolute w-[280px] h-[280px] md:w-[480px] md:h-[480px] rounded-full border border-purple-500 opacity-10 transition-all duration-100 ease-out animate-spin-slow z-10" id="void-barrier-2"></div>
+                    
+                    <img src="1.png" alt="Levitating" class="levitate relative z-20 w-40 md:w-80 object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.2)] grayscale brightness-125 contrast-125">
+                    
+                    <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                        <div class="absolute top-1/2 left-1/2 w-2 h-2 bg-white rounded-full opacity-50" style="animation: float 3s infinite;"></div>
+                        <div class="absolute top-1/3 left-1/3 w-1 h-1 bg-cyan-400 rounded-full opacity-50" style="animation: float 4s infinite reverse;"></div>
+                    </div>
+                </div>
+
+                <!-- Info Panel -->
+                <div class="relative z-20 md:pl-12 border-l-0 md:border-l-4 border-white/10 backdrop-blur-sm p-4 md:p-8 bg-black/40 md:bg-white/5 order-2 text-center md:text-left">
+                    <h2 class="text-6xl md:text-8xl font-jjk text-white mb-2 leading-none" style="text-shadow: 0 0 20px rgba(168, 85, 247, 0.5);">
+                        LIMITLESS<br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">VOID</span>
+                    </h2>
+                    
+                    <div class="h-[1px] w-full bg-gradient-to-r from-white to-transparent mb-4 md:mb-6"></div>
+
+                    <p class="text-sm md:text-2xl leading-relaxed mb-6 md:mb-8 text-gray-300 font-light">
+                        "Inside this domain, you are flooded with infinite information. You can see everything, feel everything, but do nothing."
+                    </p>
+                    
+                    <button class="enroll-trigger group relative px-6 py-2 md:px-10 md:py-4 bg-transparent border-2 border-white text-white font-jjk text-2xl md:text-3xl overflow-hidden hover-target tracking-widest">
+                        <span class="relative z-10 mix-blend-difference">DOMAIN EXPANSION</span>
+                        <div class="absolute inset-0 bg-white transform scale-y-0 group-hover:scale-y-100 transition-transform origin-bottom ease-out duration-300"></div>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="ink-wipe bg-white" id="ink-2"></div>
+        </section>
+
+
+        <!-- SECTION 3: TRAINING -->
+        <section class="section relative">
+            <div class="ink-wipe-in bg-white"></div>
+
+            <div class="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-300"></div>
+            <h2 class="absolute top-4 left-4 md:top-10 md:left-10 text-5xl md:text-9xl font-jjk text-gray-200 -z-10 opacity-50">TRAINING</h2>
+            
+            <div class="relative z-10 w-full max-w-7xl px-4 md:px-8 h-full flex flex-col justify-center">
+                <div class="text-center mb-4 md:mb-12 mt-4 md:mt-0">
+                    <h3 class="text-3xl md:text-6xl font-jjk mb-2 md:mb-4">MASTER YOUR TECHNIQUE</h3>
+                    <div class="h-1 w-20 md:w-32 bg-black mx-auto"></div>
+                </div>
+
+                <!-- 
+                   Responsive Logic for Grid:
+                   Mobile: Flex column with flex-1 to force cards to fit within 100vh.
+                   Desktop: Standard Grid layout.
+                -->
+                <div class="flex flex-col md:grid md:grid-cols-3 gap-3 md:gap-8 h-full md:h-auto pb-4 md:pb-0">
+                    <!-- Combat Card -->
+                    <div class="manga-card p-3 md:p-6 flex-1 md:h-[70vh] flex flex-col justify-between hover-target tilt-container group bg-white relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-red-500 opacity-10 blur-3xl group-hover:opacity-30 transition-opacity"></div>
+                        <div class="border-b-2 border-black pb-1 md:pb-2 flex justify-between items-end relative z-10">
+                            <span class="font-jjk text-2xl md:text-4xl">COMBAT</span>
+                            <span class="font-black text-xs md:text-sm">Vol. 1</span>
+                        </div>
+                        <div class="relative flex-grow flex items-center justify-center overflow-hidden my-2 md:my-4">
+                            <div class="absolute inset-0 bg-[radial-gradient(circle,black_1px,transparent_1px)] bg-[length:10px_10px] opacity-20"></div>
+                            <img src="0224-004.png" class="w-full object-contain h-full md:h-64 group-hover:scale-110 group-hover:rotate-2 transition-all duration-500" alt="Combat">
+                        </div>
+                        <div class="relative z-10">
+                            <!-- Hidden on mobile to save vertical space -->
+                            <p class="text-sm mb-3 text-gray-700 hidden md:block">Master hand-to-hand combat with cursed energy enhancement.</p>
+                            <p class="font-sfx text-right text-lg md:text-2xl rotate-[-2deg] text-red-600">BAM!</p>
+                        </div>
+                    </div>
+
+                    <!-- Focus Card -->
+                    <div class="manga-card focus p-3 md:p-6 flex-1 md:h-[70vh] flex flex-col justify-between hover-target tilt-container group bg-black text-white border-white relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-32 h-32 bg-purple-500 opacity-20 blur-3xl group-hover:opacity-40 transition-opacity"></div>
+                        <div class="border-b-2 border-white pb-1 md:pb-2 flex justify-between items-end relative z-10">
+                            <span class="font-jjk text-2xl md:text-4xl text-purple-400">FOCUS</span>
+                            <span class="font-black text-xs md:text-sm">Vol. 2</span>
+                        </div>
+                        <div class="relative flex-grow flex items-center justify-center overflow-hidden my-2 md:my-4">
+                            <div class="absolute inset-0 speed-lines opacity-10 bg-white"></div>
+                            <img src="gojo-training.png" class="w-full object-contain h-full md:h-64 group-hover:scale-110 group-hover:-rotate-2 transition-all duration-500 grayscale invert" alt="Training">
+                        </div>
+                        <div class="relative z-10">
+                            <p class="text-sm mb-3 text-gray-300 hidden md:block">Channel your cursed energy with precision and control.</p>
+                            <p class="font-sfx text-left text-lg md:text-2xl rotate-[2deg] text-purple-400">WOOSH</p>
+                        </div>
+                    </div>
+
+                    <!-- Domain Card -->
+                    <div class="manga-card domain p-3 md:p-6 flex-1 md:h-[70vh] flex flex-col justify-between hover-target tilt-container group bg-gradient-to-br from-gray-900 to-black text-white relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-40 h-40 bg-blue-500 opacity-20 blur-3xl group-hover:opacity-40 transition-opacity"></div>
+                        <div class="border-b-2 border-cyan-400 pb-1 md:pb-2 flex justify-between items-end relative z-10">
+                            <span class="font-jjk text-2xl md:text-4xl text-cyan-400">DOMAIN</span>
+                            <span class="font-black text-xs md:text-sm">Vol. 3</span>
+                        </div>
+                        <div class="relative flex-grow flex items-center justify-center overflow-hidden my-2 md:my-4">
+                            <div class="absolute inset-0 bg-[conic-gradient(from_0deg,transparent,cyan,transparent)] opacity-10 animate-spin" style="animation-duration: 8s;"></div>
+                            <div class="text-center">
+                                <div class="text-5xl md:text-8xl font-jjk text-cyan-400 mb-2 md:mb-4 opacity-80">∞</div>
+                                <div class="text-xs md:text-sm text-gray-400 uppercase tracking-widest">Unlimited Void</div>
+                            </div>
+                        </div>
+                        <div class="relative z-10">
+                            <p class="text-sm mb-3 text-gray-300 hidden md:block">Expand your domain and overwhelm your opponents.</p>
+                            <p class="font-sfx text-center text-lg md:text-2xl text-cyan-400">EXPAND</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="ink-wipe bg-black" id="ink-3"></div>
+        </section>
+
+
+        <!-- SECTION 4: BLACK FLASH -->
+        <section class="section bg-black text-white relative overflow-hidden">
+            <div class="ink-wipe-in bg-black"></div>
+
+            <div class="absolute inset-0 bg-gradient-to-br from-red-950 via-black to-black"></div>
+            <div class="absolute inset-0 bg-red-700 opacity-10" style="clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 w-full max-w-6xl items-center z-10 gap-6 md:gap-12 px-4 md:px-8">
+                <!-- Image Container -->
+                <div class="relative hover-target order-1 md:order-1 h-[40vh] md:h-auto flex items-center justify-center">
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-[conic-gradient(from_0deg,transparent_0deg,rgba(255,255,255,0.1)_10deg,transparent_20deg)] opacity-20" style="animation: spin-slow 20s linear infinite;"></div>
+                    <div class="absolute inset-0 bg-red-600 blur-[100px] opacity-20 animate-pulse"></div>
+                    <img src="Untitled86_20240917203339.png" alt="Action Pose" class="h-full md:w-full max-w-md object-contain relative z-20 grayscale contrast-125 hover:grayscale-0 hover:scale-105 transition-all duration-300 mx-auto">
+                </div>
+                
+                <!-- Text Container -->
+                <div class="text-center md:text-right order-2 md:order-2">
+                    <div class="inline-block mb-2 md:mb-4">
+                        <div class="bg-red-600 text-white px-2 py-1 md:px-4 md:py-1 font-sfx text-xs md:text-sm transform rotate-2">ULTIMATE TECHNIQUE</div>
+                    </div>
+                    <!-- Responsive Text Sizes -->
+                    <h2 class="text-5xl md:text-8xl font-jjk text-white mb-0 md:mb-2 leading-none">BLACK</h2>
+                    <h2 class="text-5xl md:text-8xl font-jjk text-red-600 mb-4 md:mb-6 leading-none">FLASH</h2>
+                    
+                    <div class="bg-white/5 backdrop-blur-sm border-l-4 border-red-600 p-4 md:p-6 mb-4 md:mb-8 text-left">
+                        <p class="text-sm md:text-xl font-bold mb-2 md:mb-4">
+                            A distortion in space that occurs when cursed energy is applied within 0.000001 seconds of a physical hit.
+                        </p>
+                        <div class="flex gap-4 text-sm">
+                            <div class="flex-1">
+                                <div class="text-red-400 font-jjk text-xl md:text-2xl">2.5x</div>
+                                <div class="text-gray-400 text-xs md:text-base">Power Multiplier</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="border-2 border-red-600 bg-red-600/20 px-6 py-2 md:px-8 md:py-3 font-jjk text-xl md:text-2xl hover:bg-red-600 hover:scale-105 transition-all hover-target">
+                        LEARN TECHNIQUE
+                    </button>
+                    <div class="text-6xl md:text-9xl font-jjk opacity-10 absolute right-0 bottom-0 pointer-events-none">黒閃</div>
+                </div>
+            </div>
+            <div class="ink-wipe bg-white" id="ink-4"></div>
+        </section>
+
+
+        <!-- SECTION 5: FOOTER -->
+        <section class="section relative bg-gradient-to-br from-gray-100 to-white">
+            <div class="ink-wipe-in bg-white"></div>
+            <!-- Removed Duplicate texture-overlay here to fix click issues while keeping layout -->
+            
+            <!-- Updated: Added relative to ensure safe stacking context -->
+            <div class="relative flex flex-col items-center justify-center z-10 px-4 w-full">
+                <div class="relative mb-8 md:mb-12 hover-target group">
+                    <div class="absolute -top-12 -right-12 md:-top-16 md:-right-16 bg-black text-white px-4 py-2 md:px-6 md:py-3 font-sfx rounded-tl-xl rounded-br-xl shadow-[6px_6px_0px_#d93025] md:shadow-[8px_8px_0px_#d93025] animate-bounce text-xs md:text-base">
+                        See ya! 
+                    </div>
+                    <div class="absolute inset-0 bg-purple-400 blur-3xl opacity-20 animate-pulse"></div>
+                    <img src="thanks.png" alt="Thanks" class="w-32 md:w-64 drop-shadow-xl tilt-container group-hover:rotate-12 group-hover:scale-110 transition-transform relative z-10">
+                </div>
+
+                <h2 class="text-4xl md:text-7xl font-jjk mb-2 md:mb-4 text-center">JOIN THE CLASS</h2>
+                <p class="text-gray-600 mb-6 md:mb-8 text-center max-w-md text-sm md:text-base px-2">
+                    Unlock your potential and master the limitless technique. Begin your journey to becoming the honored one.
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-6 font-jjk text-xl md:text-2xl mb-8 md:mb-12">
+                    <a href="#" class="enroll-trigger px-6 py-3 md:px-8 md:py-4 bg-black text-white hover:bg-red-600 hover:scale-110 transition-all transform hover:-rotate-2 shadow-[6px_6px_0px_rgba(0,0,0,0.3)] md:shadow-[8px_8px_0px_rgba(0,0,0,0.3)] hover:shadow-[12px_12px_0px_#d93025] hover-target text-center">
+                        ENROLL NOW
+                    </a>
+                </div>
+
+                <footer class="text-center text-xs font-bold opacity-50 px-4">
+                    © 2024 GOJO SATORU DOJO. CURSED ENERGY REQUIRED.
+                    <div class="mt-2 text-[10px]">天上天下唯我独尊</div>
+                </footer>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // --- SMOOTH SCROLL INIT (LENIS) ---
+        document.addEventListener("DOMContentLoaded", () => {
+            if (typeof Lenis !== 'undefined') {
+                const lenis = new Lenis({
+                    duration: 1.2,
+                    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), 
+                    direction: 'vertical',
+                    gestureDirection: 'vertical',
+                    smooth: true,
+                    mouseMultiplier: 1,
+                    smoothTouch: false,
+                    touchMultiplier: 2,
+                });
+
+                function raf(time) {
+                    lenis.raf(time);
+                    requestAnimationFrame(raf);
+                }
+                requestAnimationFrame(raf);
+            } else {
+                console.warn("Lenis library failed to load. Smooth scroll disabled.");
+            }
+        });
+
+        // SYNC GSAP WITH LENIS
+        gsap.registerPlugin(ScrollTrigger);
+        
+        // --- HORIZONTAL SCROLL ---
+        const sections = gsap.utils.toArray(".section");
+        const container = document.querySelector(".wrapper");
+
+        let scrollTween = gsap.to(sections, {
+            xPercent: -100 * (sections.length - 1),
+            ease: "none", 
+            scrollTrigger: {
+                trigger: ".wrapper",
+                pin: true,
+                scrub: 1, 
+                end: "+=" + (container.offsetWidth - window.innerWidth),
+                onUpdate: (self) => {
+                    gsap.to(".speed-lines", { 
+                        x: -self.progress * 200, 
+                        ease: "none", 
+                        duration: 0.1,
+                        force3D: true
+                    });
+                }
+            }
+        });
+
+        // --- INK WIPE ANIMATIONS (OUT) ---
+        sections.forEach((section, i) => {
+            const ink = section.querySelector(".ink-wipe");
+            if (ink) {
+                gsap.to(ink, {
+                    scale: 4, 
+                    ease: "power1.inOut", 
+                    force3D: true, 
+                    scrollTrigger: {
+                        trigger: section,
+                        containerAnimation: scrollTween,
+                        start: "right 90%",  
+                        end: "right 40%",    
+                        scrub: 1, 
+                    }
+                });
+            }
+        });
+
+        // --- INK WIPE ANIMATIONS (IN) ---
+        sections.forEach((section, i) => {
+            const inkIn = section.querySelector(".ink-wipe-in");
+            if (inkIn) {
+                gsap.to(inkIn, {
+                    scale: 0, 
+                    ease: "power1.inOut", 
+                    force3D: true, 
+                    scrollTrigger: {
+                        trigger: section,
+                        containerAnimation: scrollTween,
+                        start: "left 90%",  
+                        end: "left 40%",    
+                        scrub: 1, 
+                    }
+                });
+            }
+        });
+
+        // --- HERO PARALLAX LOGIC ---
+        const heroSection = document.getElementById("hero-section");
+        const heroLayers = document.querySelectorAll(".hero-parallax-layer");
+        const heroImage = document.getElementById("hero-image");
+        const aura = document.getElementById("gojo-aura");
+
+        // Only add parallax on non-touch devices to save performance and UX
+        if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+            heroSection.addEventListener("mousemove", (e) => {
+                const x = (e.clientX - window.innerWidth / 2);
+                const y = (e.clientY - window.innerHeight / 2);
+
+                if(aura) aura.style.opacity = "0.5";
+
+                heroLayers.forEach(layer => {
+                    const speed = layer.getAttribute("data-speed");
+                    const xPos = x * speed;
+                    const yPos = y * speed;
+                    gsap.to(layer, { x: xPos, y: yPos, duration: 0.5, ease: "power2.out" });
+                });
+            });
+
+            heroSection.addEventListener("mouseleave", () => {
+                 if(aura) aura.style.opacity = "0";
+                 gsap.to(heroLayers, { x: 0, y: 0, duration: 0.5 });
+            });
+        }
+
+        // --- LIMITLESS BARRIER LOGIC ---
+        const limitlessZone = document.getElementById("limitless-zone");
+        const barrier1 = document.getElementById("void-barrier");
+        const barrier2 = document.getElementById("void-barrier-2");
+
+        if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+            limitlessZone.addEventListener("mousemove", (e) => {
+                const rect = limitlessZone.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                
+                gsap.to(barrier1, { 
+                    x: x * -0.1, 
+                    y: y * -0.1, 
+                    scale: 1.1,
+                    borderColor: "#00ffff",
+                    opacity: 0.6,
+                    duration: 0.3 
+                });
+                gsap.to(barrier2, { 
+                    x: x * 0.1, 
+                    y: y * 0.1, 
+                    scale: 0.9,
+                    borderColor: "#a855f7",
+                    opacity: 0.4,
+                    duration: 0.3 
+                });
+            });
+
+            limitlessZone.addEventListener("mouseleave", () => {
+                gsap.to([barrier1, barrier2], { 
+                    x: 0, 
+                    y: 0, 
+                    scale: 1, 
+                    borderColor: "rgba(255,255,255,0.2)",
+                    opacity: 0.2,
+                    duration: 0.5 
+                });
+            });
+        }
+
+
+        // Standard Interaction
+        const blob = document.querySelector(".cursor-blob");
+        const trail = document.querySelector(".cursor-trail");
+        
+        // Disable custom cursor on touch devices entirely
+        if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+            window.addEventListener("mousemove", (e) => {
+                gsap.to(blob, { x: e.clientX, y: e.clientY, duration: 0.1 });
+                gsap.to(trail, { x: e.clientX, y: e.clientY, duration: 0.4, ease: "power2.out" });
+            });
+
+            document.querySelectorAll(".hover-target").forEach(el => {
+                el.addEventListener("mouseenter", () => {
+                    gsap.to(trail, { scale: 2, borderColor: "#d93025", mixBlendMode: "difference" });
+                });
+                el.addEventListener("mouseleave", () => {
+                    gsap.to(trail, { scale: 1, borderColor: "#050505", mixBlendMode: "normal" });
+                });
+            });
+        } else {
+             blob.style.display = 'none';
+             trail.style.display = 'none';
+             document.body.style.cursor = 'auto';
+        }
+
+        // Tilt Cards - Desktop Only
+        if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+            document.querySelectorAll(".tilt-container").forEach(card => {
+                card.addEventListener("mousemove", (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const xPct = (x / rect.width - 0.5) * 30;
+                    const yPct = (y / rect.height - 0.5) * -30;
+
+                    gsap.to(card, {
+                        transform: `perspective(1000px) rotateX(${yPct}deg) rotateY(${xPct}deg) scale(1.05)`,
+                        duration: 0.1
+                    });
+                });
+                card.addEventListener("mouseleave", () => {
+                    gsap.to(card, { transform: "perspective(1000px) rotateX(0) rotateY(0) scale(1)", duration: 0.5 });
+                });
+            });
+        }
+        
+        // --- OVERLAY LOGIC ---
+        const overlay = document.getElementById("application-overlay");
+        const closeBtn = document.getElementById("close-overlay");
+        const inkWipeOverlay = document.querySelector(".ink-wipe-overlay");
+        const inkWipeOverlay2 = document.querySelector(".ink-wipe-overlay-2");
+        const stampBox = document.querySelector(".stamp-box");
+        const overlayText = document.getElementById("overlay-text");
+
+        document.querySelectorAll(".enroll-trigger").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                e.preventDefault();
+                overlay.style.display = "flex";
+                
+                const tl = gsap.timeline();
+                
+                tl.to(inkWipeOverlay2, { scale: 4, duration: 0.6, ease: "expo.in" }) 
+                  .to(inkWipeOverlay, { scale: 4, duration: 0.6, ease: "expo.in" }, "-=0.5") 
+                  .to(overlay, { opacity: 1, duration: 0.1 })
+                  .to(inkWipeOverlay, { scale: 0, duration: 0.4, ease: "circ.out" })
+                  .to(inkWipeOverlay2, { scale: 0, duration: 0.4, ease: "circ.out" }, "-=0.3")
+                  .to(stampBox, { opacity: 1, scale: 1, rotate: "-5deg", duration: 0.3, ease: "back.out(1.7)" })
+                  .to(stampBox, { rotate: "-2deg", duration: 0.1, y: 2, yoyo: true, repeat: 1 }) 
+                  .to(overlayText, { opacity: 1, y: 0, duration: 0.5 });
+            });
+        });
+
+        closeBtn.addEventListener("click", () => {
+            gsap.to(overlay, { opacity: 0, duration: 0.5, onComplete: () => {
+                overlay.style.display = "none";
+                gsap.set(stampBox, { opacity: 0, scale: 2 });
+                gsap.set(overlayText, { opacity: 0 });
+            }});
+        });
+    </script>
+</body>
+</html>
