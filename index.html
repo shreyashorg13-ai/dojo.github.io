@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gojo's Karate Dojo - Domain Expansion</title>
     
     <!-- Tailwind CSS -->
@@ -33,10 +33,12 @@
             font-family: 'Noto Sans JP', sans-serif;
             overflow-x: hidden;
             margin: 0;
-            /* Replaced custom cursor with auto for touch devices in JS, 
-               but kept 'none' as default for desktop consistency */
-            cursor: none; 
+            cursor: auto; /* Default for mobile */
             overscroll-behavior: none;
+        }
+
+        @media (min-width: 768px) {
+            body { cursor: none; }
         }
 
         /* --- MANGA TEXTURES --- */
@@ -88,6 +90,7 @@
             z-index: 9999;
             transform: translate(-50%, -50%);
             mix-blend-mode: exclusion;
+            display: none;
         }
         .cursor-trail {
             position: fixed;
@@ -99,6 +102,11 @@
             z-index: 9998;
             transform: translate(-50%, -50%);
             transition: width 0.3s, height 0.3s, opacity 0.3s;
+            display: none;
+        }
+        
+        @media (min-width: 768px) {
+            .cursor-blob, .cursor-trail { display: block; }
         }
 
         /* --- ANIMATIONS --- */
@@ -131,6 +139,11 @@
             z-index: 5;
             pointer-events: none;
             will-change: transform;
+        }
+        
+        /* Ensure ink wipes cover full screen on mobile vertical layout */
+        @media (max-width: 767px) {
+            .ink-wipe, .ink-wipe-in { width: 150vmax; height: 150vmax; }
         }
 
         /* Section 1 Specifics */
@@ -186,25 +199,44 @@
             background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.2'/%3E%3C/svg%3E");
         }
 
-        /* Layout */
+        /* --- RESPONSIVE LAYOUT CHANGES --- */
         .wrapper {
             display: flex;
-            width: 500%;
-            height: 100vh;
+            width: 100%; /* Default Mobile */
+            flex-direction: column; /* Default Mobile */
+            height: auto;
             will-change: transform;
             transform: translate3d(0, 0, 0); 
             backface-visibility: hidden;
         }
+
         .section {
-            width: 100vw;
-            height: 100vh;
+            width: 100%; /* Default Mobile */
+            min-height: 100vh; /* Default Mobile */
+            height: auto;
             flex-shrink: 0;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            border-right: 2px solid var(--ink);
+            border-bottom: 2px solid var(--ink); /* Divider for Mobile */
+            border-right: none;
+        }
+
+        /* Desktop Overrides */
+        @media (min-width: 768px) {
+            .wrapper {
+                width: 500%;
+                flex-direction: row;
+                height: 100vh;
+            }
+            .section {
+                width: 100vw;
+                height: 100vh;
+                border-right: 2px solid var(--ink);
+                border-bottom: none;
+            }
         }
 
         .manga-card {
@@ -271,7 +303,7 @@
             <div class="speed-lines opacity-30"></div>
             
             <!-- Layer 1 -->
-            <h1 class="hero-parallax-layer font-jjk text-[30vw] text-gray-200 opacity-50 select-none z-0 leading-none whitespace-nowrap" data-speed="0.02" style="top: 10%; left: -10%;">
+            <h1 class="hero-parallax-layer font-jjk text-[25vw] md:text-[30vw] text-gray-200 opacity-50 select-none z-0 leading-none whitespace-nowrap" data-speed="0.02" style="top: 10%; left: -10%;">
                 JUJUTSU KAISEN
             </h1>
 
@@ -284,8 +316,9 @@
 
             <!-- Layer 3 -->
             <div class="hero-parallax-layer z-20 flex justify-center items-end w-full h-full bottom-0" data-speed="0.01">
-                <div class="relative w-auto h-[60vh] md:h-[90vh] mt-20 md:mt-0">
+                <div class="relative w-auto h-[55vh] md:h-[90vh] mt-20 md:mt-0">
                     <div class="absolute inset-0 bg-purple-500 blur-[100px] opacity-0 transition-opacity duration-300" id="gojo-aura"></div>
+                    <!-- KEEPING YOUR IMAGE PATH -->
                     <img src="PNGAnime.com-1886749336.png" 
                          class="h-full object-contain grayscale contrast-125 drop-shadow-2xl hover:grayscale-0 transition-all duration-500 hover-target" 
                          id="hero-image"
@@ -295,7 +328,7 @@
 
             <!-- Layer 4: Responsive text size and padding -->
             <div class="hero-parallax-layer z-30 w-full flex justify-between px-4 md:px-20 items-center h-full pointer-events-none" data-speed="0.08">
-                <div class="vertical-text font-black text-4xl md:text-8xl text-red-600 font-jjk tracking-widest opacity-80 mix-blend-multiply">
+                <div class="vertical-text font-black text-4xl md:text-8xl text-red-600 font-jjk tracking-widest opacity-80 mix-blend-multiply absolute right-4 bottom-24 md:static">
                     領域展開
                 </div>
             </div>
@@ -325,7 +358,7 @@
             </div>
 
             <!-- Responsive Grid: Changes to Flex Column on Mobile -->
-            <div class="flex flex-col md:grid md:grid-cols-2 w-full max-w-7xl px-4 md:px-8 items-center justify-center z-10 h-full relative gap-4 md:gap-0">
+            <div class="flex flex-col md:grid md:grid-cols-2 w-full max-w-7xl px-4 md:px-8 items-center justify-center z-10 h-full relative gap-8 md:gap-0 py-10 md:py-0">
                 
                 <!-- Interactive Levitating Area -->
                 <div class="relative w-full h-[40vh] md:h-[60vh] flex items-center justify-center hover-target order-1" id="limitless-zone">
@@ -334,6 +367,7 @@
                     <div class="absolute w-[300px] h-[300px] md:w-[500px] md:h-[500px] rounded-full border border-cyan-500 opacity-20 transition-all duration-100 ease-out z-10" id="void-barrier"></div>
                     <div class="absolute w-[280px] h-[280px] md:w-[480px] md:h-[480px] rounded-full border border-purple-500 opacity-10 transition-all duration-100 ease-out animate-spin-slow z-10" id="void-barrier-2"></div>
                     
+                    <!-- KEEPING YOUR IMAGE PATH -->
                     <img src="1.png" alt="Levitating" class="levitate relative z-20 w-40 md:w-80 object-contain drop-shadow-[0_0_30px_rgba(255,255,255,0.2)] grayscale brightness-125 contrast-125">
                     
                     <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
@@ -355,7 +389,7 @@
                         "Inside this domain, you are flooded with infinite information. You can see everything, feel everything, but do nothing."
                     </p>
                     
-                    <button class="enroll-trigger group relative px-6 py-2 md:px-10 md:py-4 bg-transparent border-2 border-white text-white font-jjk text-2xl md:text-3xl overflow-hidden hover-target tracking-widest">
+                    <button class="enroll-trigger group relative px-6 py-2 md:px-10 md:py-4 bg-transparent border-2 border-white text-white font-jjk text-2xl md:text-3xl overflow-hidden hover-target tracking-widest w-full md:w-auto">
                         <span class="relative z-10 mix-blend-difference">DOMAIN EXPANSION</span>
                         <div class="absolute inset-0 bg-white transform scale-y-0 group-hover:scale-y-100 transition-transform origin-bottom ease-out duration-300"></div>
                     </button>
@@ -373,20 +407,20 @@
             <div class="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-300"></div>
             <h2 class="absolute top-4 left-4 md:top-10 md:left-10 text-5xl md:text-9xl font-jjk text-gray-200 -z-10 opacity-50">TRAINING</h2>
             
-            <div class="relative z-10 w-full max-w-7xl px-4 md:px-8 h-full flex flex-col justify-center">
-                <div class="text-center mb-4 md:mb-12 mt-4 md:mt-0">
+            <div class="relative z-10 w-full max-w-7xl px-4 md:px-8 h-full flex flex-col justify-center py-10 md:py-0">
+                <div class="text-center mb-8 md:mb-12 mt-4 md:mt-0">
                     <h3 class="text-3xl md:text-6xl font-jjk mb-2 md:mb-4">MASTER YOUR TECHNIQUE</h3>
                     <div class="h-1 w-20 md:w-32 bg-black mx-auto"></div>
                 </div>
 
                 <!-- 
                    Responsive Logic for Grid:
-                   Mobile: Flex column with flex-1 to force cards to fit within 100vh.
+                   Mobile: Flex column with min-height to stacking cards properly
                    Desktop: Standard Grid layout.
                 -->
-                <div class="flex flex-col md:grid md:grid-cols-3 gap-3 md:gap-8 h-full md:h-auto pb-4 md:pb-0">
+                <div class="flex flex-col md:grid md:grid-cols-3 gap-6 md:gap-8 h-auto md:h-auto pb-4 md:pb-0">
                     <!-- Combat Card -->
-                    <div class="manga-card p-3 md:p-6 flex-1 md:h-[70vh] flex flex-col justify-between hover-target tilt-container group bg-white relative overflow-hidden">
+                    <div class="manga-card p-6 md:p-6 flex-1 md:h-[70vh] flex flex-col justify-between hover-target tilt-container group bg-white relative overflow-hidden min-h-[350px]">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-red-500 opacity-10 blur-3xl group-hover:opacity-30 transition-opacity"></div>
                         <div class="border-b-2 border-black pb-1 md:pb-2 flex justify-between items-end relative z-10">
                             <span class="font-jjk text-2xl md:text-4xl">COMBAT</span>
@@ -394,17 +428,17 @@
                         </div>
                         <div class="relative flex-grow flex items-center justify-center overflow-hidden my-2 md:my-4">
                             <div class="absolute inset-0 bg-[radial-gradient(circle,black_1px,transparent_1px)] bg-[length:10px_10px] opacity-20"></div>
+                            <!-- KEEPING YOUR IMAGE PATH -->
                             <img src="0224-004.png" class="w-full object-contain h-full md:h-64 group-hover:scale-110 group-hover:rotate-2 transition-all duration-500" alt="Combat">
                         </div>
                         <div class="relative z-10">
-                            <!-- Hidden on mobile to save vertical space -->
-                            <p class="text-sm mb-3 text-gray-700 hidden md:block">Master hand-to-hand combat with cursed energy enhancement.</p>
+                            <p class="text-sm mb-3 text-gray-700 block">Master hand-to-hand combat with cursed energy enhancement.</p>
                             <p class="font-sfx text-right text-lg md:text-2xl rotate-[-2deg] text-red-600">BAM!</p>
                         </div>
                     </div>
 
                     <!-- Focus Card -->
-                    <div class="manga-card focus p-3 md:p-6 flex-1 md:h-[70vh] flex flex-col justify-between hover-target tilt-container group bg-black text-white border-white relative overflow-hidden">
+                    <div class="manga-card focus p-6 md:p-6 flex-1 md:h-[70vh] flex flex-col justify-between hover-target tilt-container group bg-black text-white border-white relative overflow-hidden min-h-[350px]">
                         <div class="absolute top-0 left-0 w-32 h-32 bg-purple-500 opacity-20 blur-3xl group-hover:opacity-40 transition-opacity"></div>
                         <div class="border-b-2 border-white pb-1 md:pb-2 flex justify-between items-end relative z-10">
                             <span class="font-jjk text-2xl md:text-4xl text-purple-400">FOCUS</span>
@@ -412,16 +446,17 @@
                         </div>
                         <div class="relative flex-grow flex items-center justify-center overflow-hidden my-2 md:my-4">
                             <div class="absolute inset-0 speed-lines opacity-10 bg-white"></div>
+                            <!-- KEEPING YOUR IMAGE PATH -->
                             <img src="gojo-training.png" class="w-full object-contain h-full md:h-64 group-hover:scale-110 group-hover:-rotate-2 transition-all duration-500 grayscale invert" alt="Training">
                         </div>
                         <div class="relative z-10">
-                            <p class="text-sm mb-3 text-gray-300 hidden md:block">Channel your cursed energy with precision and control.</p>
+                            <p class="text-sm mb-3 text-gray-300 block">Channel your cursed energy with precision and control.</p>
                             <p class="font-sfx text-left text-lg md:text-2xl rotate-[2deg] text-purple-400">WOOSH</p>
                         </div>
                     </div>
 
                     <!-- Domain Card -->
-                    <div class="manga-card domain p-3 md:p-6 flex-1 md:h-[70vh] flex flex-col justify-between hover-target tilt-container group bg-gradient-to-br from-gray-900 to-black text-white relative overflow-hidden">
+                    <div class="manga-card domain p-6 md:p-6 flex-1 md:h-[70vh] flex flex-col justify-between hover-target tilt-container group bg-gradient-to-br from-gray-900 to-black text-white relative overflow-hidden min-h-[350px]">
                         <div class="absolute top-0 right-0 w-40 h-40 bg-blue-500 opacity-20 blur-3xl group-hover:opacity-40 transition-opacity"></div>
                         <div class="border-b-2 border-cyan-400 pb-1 md:pb-2 flex justify-between items-end relative z-10">
                             <span class="font-jjk text-2xl md:text-4xl text-cyan-400">DOMAIN</span>
@@ -435,7 +470,7 @@
                             </div>
                         </div>
                         <div class="relative z-10">
-                            <p class="text-sm mb-3 text-gray-300 hidden md:block">Expand your domain and overwhelm your opponents.</p>
+                            <p class="text-sm mb-3 text-gray-300 block">Expand your domain and overwhelm your opponents.</p>
                             <p class="font-sfx text-center text-lg md:text-2xl text-cyan-400">EXPAND</p>
                         </div>
                     </div>
@@ -452,11 +487,12 @@
             <div class="absolute inset-0 bg-gradient-to-br from-red-950 via-black to-black"></div>
             <div class="absolute inset-0 bg-red-700 opacity-10" style="clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);"></div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 w-full max-w-6xl items-center z-10 gap-6 md:gap-12 px-4 md:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 w-full max-w-6xl items-center z-10 gap-6 md:gap-12 px-4 md:px-8 py-10 md:py-0">
                 <!-- Image Container -->
                 <div class="relative hover-target order-1 md:order-1 h-[40vh] md:h-auto flex items-center justify-center">
                     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-[conic-gradient(from_0deg,transparent_0deg,rgba(255,255,255,0.1)_10deg,transparent_20deg)] opacity-20" style="animation: spin-slow 20s linear infinite;"></div>
                     <div class="absolute inset-0 bg-red-600 blur-[100px] opacity-20 animate-pulse"></div>
+                    <!-- KEEPING YOUR IMAGE PATH -->
                     <img src="Untitled86_20240917203339.png" alt="Action Pose" class="h-full md:w-full max-w-md object-contain relative z-20 grayscale contrast-125 hover:grayscale-0 hover:scale-105 transition-all duration-300 mx-auto">
                 </div>
                 
@@ -481,7 +517,7 @@
                         </div>
                     </div>
                     
-                    <button class="border-2 border-red-600 bg-red-600/20 px-6 py-2 md:px-8 md:py-3 font-jjk text-xl md:text-2xl hover:bg-red-600 hover:scale-105 transition-all hover-target">
+                    <button class="border-2 border-red-600 bg-red-600/20 px-6 py-2 md:px-8 md:py-3 font-jjk text-xl md:text-2xl hover:bg-red-600 hover:scale-105 transition-all hover-target w-full md:w-auto">
                         LEARN TECHNIQUE
                     </button>
                     <div class="text-6xl md:text-9xl font-jjk opacity-10 absolute right-0 bottom-0 pointer-events-none">黒閃</div>
@@ -497,12 +533,13 @@
             <!-- Removed Duplicate texture-overlay here to fix click issues while keeping layout -->
             
             <!-- Updated: Added relative to ensure safe stacking context -->
-            <div class="relative flex flex-col items-center justify-center z-10 px-4 w-full">
+            <div class="relative flex flex-col items-center justify-center z-10 px-4 w-full py-10 md:py-0">
                 <div class="relative mb-8 md:mb-12 hover-target group">
                     <div class="absolute -top-12 -right-12 md:-top-16 md:-right-16 bg-black text-white px-4 py-2 md:px-6 md:py-3 font-sfx rounded-tl-xl rounded-br-xl shadow-[6px_6px_0px_#d93025] md:shadow-[8px_8px_0px_#d93025] animate-bounce text-xs md:text-base">
                         See ya! 
                     </div>
                     <div class="absolute inset-0 bg-purple-400 blur-3xl opacity-20 animate-pulse"></div>
+                    <!-- KEEPING YOUR IMAGE PATH -->
                     <img src="thanks.png" alt="Thanks" class="w-32 md:w-64 drop-shadow-xl tilt-container group-hover:rotate-12 group-hover:scale-110 transition-transform relative z-10">
                 </div>
 
@@ -511,8 +548,8 @@
                     Unlock your potential and master the limitless technique. Begin your journey to becoming the honored one.
                 </p>
                 
-                <div class="flex flex-col sm:flex-row gap-6 font-jjk text-xl md:text-2xl mb-8 md:mb-12">
-                    <a href="#" class="enroll-trigger px-6 py-3 md:px-8 md:py-4 bg-black text-white hover:bg-red-600 hover:scale-110 transition-all transform hover:-rotate-2 shadow-[6px_6px_0px_rgba(0,0,0,0.3)] md:shadow-[8px_8px_0px_rgba(0,0,0,0.3)] hover:shadow-[12px_12px_0px_#d93025] hover-target text-center">
+                <div class="flex flex-col sm:flex-row gap-6 font-jjk text-xl md:text-2xl mb-8 md:mb-12 w-full justify-center">
+                    <a href="#" class="enroll-trigger px-6 py-3 md:px-8 md:py-4 bg-black text-white hover:bg-red-600 hover:scale-110 transition-all transform hover:-rotate-2 shadow-[6px_6px_0px_rgba(0,0,0,0.3)] md:shadow-[8px_8px_0px_rgba(0,0,0,0.3)] hover:shadow-[12px_12px_0px_#d93025] hover-target text-center w-full md:w-auto">
                         ENROLL NOW
                     </a>
                 </div>
@@ -553,68 +590,103 @@
 
         // SYNC GSAP WITH LENIS
         gsap.registerPlugin(ScrollTrigger);
-        
-        // --- HORIZONTAL SCROLL ---
+
+        // --- RESPONSIVE SCROLL LOGIC ---
+        // Use matchMedia so the horizontal scroll animation ONLY happens on desktop
+        let mm = gsap.matchMedia();
         const sections = gsap.utils.toArray(".section");
         const container = document.querySelector(".wrapper");
 
-        let scrollTween = gsap.to(sections, {
-            xPercent: -100 * (sections.length - 1),
-            ease: "none", 
-            scrollTrigger: {
-                trigger: ".wrapper",
-                pin: true,
-                scrub: 1, 
-                end: "+=" + (container.offsetWidth - window.innerWidth),
-                onUpdate: (self) => {
-                    gsap.to(".speed-lines", { 
-                        x: -self.progress * 200, 
-                        ease: "none", 
-                        duration: 0.1,
-                        force3D: true
+        // DESKTOP (Horizontal)
+        mm.add("(min-width: 768px)", () => {
+            let scrollTween = gsap.to(sections, {
+                xPercent: -100 * (sections.length - 1),
+                ease: "none", 
+                scrollTrigger: {
+                    trigger: ".wrapper",
+                    pin: true,
+                    scrub: 1, 
+                    end: "+=" + (container.offsetWidth - window.innerWidth),
+                    onUpdate: (self) => {
+                        gsap.to(".speed-lines", { 
+                            x: -self.progress * 200, 
+                            ease: "none", 
+                            duration: 0.1,
+                            force3D: true
+                        });
+                    }
+                }
+            });
+
+            // Ink Wipes (Desktop)
+            sections.forEach((section, i) => {
+                const ink = section.querySelector(".ink-wipe");
+                const inkIn = section.querySelector(".ink-wipe-in");
+                
+                if (ink) {
+                    gsap.to(ink, {
+                        scale: 4, 
+                        ease: "power1.inOut", 
+                        force3D: true, 
+                        scrollTrigger: {
+                            trigger: section,
+                            containerAnimation: scrollTween,
+                            start: "right 90%",  
+                            end: "right 40%",    
+                            scrub: 1, 
+                        }
                     });
                 }
-            }
+                if (inkIn) {
+                    gsap.to(inkIn, {
+                        scale: 0, 
+                        ease: "power1.inOut", 
+                        force3D: true, 
+                        scrollTrigger: {
+                            trigger: section,
+                            containerAnimation: scrollTween,
+                            start: "left 90%",  
+                            end: "left 40%",    
+                            scrub: 1, 
+                        }
+                    });
+                }
+            });
         });
 
-        // --- INK WIPE ANIMATIONS (OUT) ---
-        sections.forEach((section, i) => {
-            const ink = section.querySelector(".ink-wipe");
-            if (ink) {
-                gsap.to(ink, {
-                    scale: 4, 
-                    ease: "power1.inOut", 
-                    force3D: true, 
-                    scrollTrigger: {
-                        trigger: section,
-                        containerAnimation: scrollTween,
-                        start: "right 90%",  
-                        end: "right 40%",    
-                        scrub: 1, 
-                    }
-                });
-            }
-        });
+        // MOBILE (Vertical)
+        mm.add("(max-width: 767px)", () => {
+            sections.forEach((section) => {
+                const ink = section.querySelector(".ink-wipe");
+                const inkIn = section.querySelector(".ink-wipe-in");
 
-        // --- INK WIPE ANIMATIONS (IN) ---
-        sections.forEach((section, i) => {
-            const inkIn = section.querySelector(".ink-wipe-in");
-            if (inkIn) {
-                gsap.to(inkIn, {
-                    scale: 0, 
-                    ease: "power1.inOut", 
-                    force3D: true, 
-                    scrollTrigger: {
-                        trigger: section,
-                        containerAnimation: scrollTween,
-                        start: "left 90%",  
-                        end: "left 40%",    
-                        scrub: 1, 
-                    }
-                });
-            }
+                // Wipe OUT on exit
+                if (ink) {
+                    gsap.to(ink, {
+                        scale: 4,
+                        scrollTrigger: {
+                            trigger: section,
+                            start: "bottom bottom", 
+                            end: "bottom top", 
+                            scrub: 1
+                        }
+                    });
+                }
+                // Wipe IN on entry
+                if (inkIn) {
+                    gsap.to(inkIn, {
+                        scale: 0,
+                        scrollTrigger: {
+                            trigger: section,
+                            start: "top bottom", 
+                            end: "center center",
+                            scrub: 1
+                        }
+                    });
+                }
+            });
         });
-
+        
         // --- HERO PARALLAX LOGIC ---
         const heroSection = document.getElementById("hero-section");
         const heroLayers = document.querySelectorAll(".hero-parallax-layer");
